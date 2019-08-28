@@ -369,6 +369,9 @@ modelMatSelection <- function(
 #' @param colsVar List specifying the colors to use for each label in each colouring level for cell metadata
 #' @param plot_ly Whether plot_ly should be used for the plots
 #' @param legend Whether plots should be given with a legend. If FALSE, the legend is given in an independent following plot.
+#' @param xlim Set the x-axis limit, such as 'c(-5,5)'. By default, the xlim will be automatically decided.
+#' @param ylim Set the y-axis limit, such as 'c(-5,5)'. By default, the xlim will be automatically decided.
+#' @param zlim Set the z-axis limit, such as 'c(-5,5)'. By default, the xlim will be automatically decided.
 #' @param ... Ignored.
 #'
 #' @return Plots cell states based on the dimensionality reduction method selected, coloured by the given metadata (one plot per feature).
@@ -395,6 +398,9 @@ plotFeatures <- function(
   factor.min=0.05,
   factor.max=0.75,
   cex.dot=1,
+  xlim=NULL,
+  ylim=NULL,
+  zlim=NULL,
   ...
 ){
   if (is.null(colorBy) && is.null(topic_contr)){
@@ -442,24 +448,24 @@ plotFeatures <- function(
       if(is.numeric(variable)){
         colorPal <- grDevices::colorRampPalette(c(col.low, col.mid, col.high))
         if (method != 'Biplot'){
-          .plotContinuous(coordinates, variable, feature.names, colorPal, main=columnName, intervals=intervals, dim=dim, plot_ly=plot_ly, legend=legend, factor.min = factor.min, factor.max=factor.max, cex.dot=cex.dot)
+          .plotContinuous(coordinates, variable, feature.names, colorPal, main=columnName, intervals=intervals, dim=dim, plot_ly=plot_ly, legend=legend, factor.min = factor.min, factor.max=factor.max, cex.dot=cex.dot, xlim=xlim, ylim=ylim, zlim=zlim)
         }
         else{
           coordinates <- .rescaleVector(coordinates[,c(1:2)])
           var.coord <- .rescaleVector(object@dr[[target]][['PCA']]$var.coord[,c(1:2)])
-          .plotContinuous(coordinates, variable, feature.names, colorPal, main=columnName, intervals=intervals, dim=2, var.coord=var.coord, plot_ly=plot_ly, legend=legend, factor.min = factor.min, factor.max=factor.max, cex.dot=cex.dot)
+          .plotContinuous(coordinates, variable, feature.names, colorPal, main=columnName, intervals=intervals, dim=2, var.coord=var.coord, plot_ly=plot_ly, legend=legend, factor.min = factor.min, factor.max=factor.max, cex.dot=cex.dot, xlim=xlim, ylim=ylim, zlim=zlim)
         }
         
       }
       
       else{
         if (method != 'Biplot'){
-          .plotFactor(coordinates, variable, feature.names, main=columnName, dim=dim, colVars=colVars, plot_ly=plot_ly, legend=legend, cex.legend = cex.legend, factor.min = factor.min, factor.max=factor.max, cex.dot=cex.dot)
+          .plotFactor(coordinates, variable, feature.names, main=columnName, dim=dim, colVars=colVars, plot_ly=plot_ly, legend=legend, cex.legend = cex.legend, factor.min = factor.min, factor.max=factor.max, cex.dot=cex.dot, xlim=xlim, ylim=ylim, zlim=zlim)
         }
         else{
           coordinates <- .rescaleVector(coordinates[,c(1:2)])
           var.coord <- .rescaleVector(object@dr[[target]][['PCA']]$var.coord[,c(1:2)])
-          .plotFactor(coordinates, variable, feature.names, main=columnName, dim=2, var.coord=var.coord, colVars=colVars, plot_ly=plot_ly, legend=legend, cex.legend = cex.legend, factor.min = factor.min, factor.max = factor.max, cex.dot=cex.dot)
+          .plotFactor(coordinates, variable, feature.names, main=columnName, dim=2, var.coord=var.coord, colVars=colVars, plot_ly=plot_ly, legend=legend, cex.legend = cex.legend, factor.min = factor.min, factor.max = factor.max, cex.dot=cex.dot, xlim=xlim, ylim=ylim, zlim=zlim)
         }
       }
     }
@@ -476,12 +482,12 @@ plotFeatures <- function(
     colorPal <- grDevices::colorRampPalette(c(col.low, col.mid, col.high))
     for (i in 1:nrow(topic.mat)){
       if(method != 'Biplot'){
-        .plotContinuous(coordinates, topic.mat[i,], feature.names, colorPal, main=rownames(topic.mat)[i], intervals=intervals, dim=dim, labels=labels, plot_ly=plot_ly, legend=legend, factor.min = factor.min, factor.max=factor.max, cex.dot=cex.dot)
+        .plotContinuous(coordinates, topic.mat[i,], feature.names, colorPal, main=rownames(topic.mat)[i], intervals=intervals, dim=dim, labels=labels, plot_ly=plot_ly, legend=legend, factor.min = factor.min, factor.max=factor.max, cex.dot=cex.dot, xlim=xlim, ylim=ylim, zlim=zlim)
       }
       else{
         coordinates <- .rescaleVector(coordinates[,c(1:2)])
         var.coord <- .rescaleVector(object@dr[[target]][['PCA']]$var.coord[,c(1:2)])
-        .plotContinuous(coordinates, topic.mat[i,], feature.names, colorPal, main=rownames(topic.mat)[i], intervals=intervals, dim=2, var.coord = var.coord, labels=labels, plot_ly=plot_ly, legend=legend, factor.min = factor.min, factor.max=factor.max, cex.dot=cex.dot)
+        .plotContinuous(coordinates, topic.mat[i,], feature.names, colorPal, main=rownames(topic.mat)[i], intervals=intervals, dim=2, var.coord = var.coord, labels=labels, plot_ly=plot_ly, legend=legend, factor.min = factor.min, factor.max=factor.max, cex.dot=cex.dot, xlim=xlim, ylim=ylim, zlim=zlim)
       }
     }
   }
@@ -559,6 +565,9 @@ plotFeatures <- function(
   factor.min=0.05,
   factor.max=0.2,
   cex.dot=1,
+  xlim=NULL,
+  ylim=NULL,
+  zlim=NULL,
   ...
 ){
   cellColor <- setNames(adjustcolor(colorPal(intervals), alpha=.8)[as.numeric(cut(variable,breaks=10, right=F,include.lowest=T))], names)
@@ -566,8 +575,15 @@ plotFeatures <- function(
   
   if (!is.null(var.coord)){
     # Plot the correlation circle
+    # decide xlim and ylim
+    if (is.null(xlim)) {
+      xlim = c(-1-factor.min, 1+factor.max)
+    }
+    if (is.null(ylim)) {
+      ylim = c(-1-factor.min, 1+factor.max)
+    }    
     a <- seq(0, 2*pi, length = 100)
-    plot(cos(a), sin(a), type = 'l', col="gray", xlab = "PC1",  ylab = "PC2", xlim = c(-1-factor.min, 1+factor.max), ylim= c(-1-factor.min, 1+factor.max))
+    plot(cos(a), sin(a), type = 'l', col="gray", xlab = "PC1",  ylab = "PC2", xlim = xlim, ylim = ylim)
     abline(h = 0, v = 0, lty = 2)
 
     # Plot dots
@@ -582,8 +598,14 @@ plotFeatures <- function(
   else{
     if (dim == 2){
       if (!plot_ly){
-        plot(coordinates, col=cellColor[rownames(coordinates)], pch=16, xlab=colnames(coordinates)[1], ylab=colnames(coordinates)[2], xlim = c(min(coordinates[,1])-factor.min*abs(min(coordinates[,1])), max(coordinates[,1])+factor.max*abs(max(coordinates[,1]))), 
-             ylim=c(min(coordinates[,2])-factor.min*abs(min(coordinates[,2])), max(coordinates[,2])+factor.max*abs(max(coordinates[,2]))), main=main, cex=cex.dot)
+        # decide xlim and ylim
+        if (is.null(xlim)) {
+          xlim = c(min(coordinates[,1])-factor.min*abs(min(coordinates[,1])), max(coordinates[,1])+factor.max*abs(max(coordinates[,1])))
+        }
+        if (is.null(ylim)) {
+          ylim = c(min(coordinates[,2])-factor.min*abs(min(coordinates[,2])), max(coordinates[,2])+factor.max*abs(max(coordinates[,2])))
+        }
+        plot(coordinates, col=cellColor[rownames(coordinates)], pch=16, xlab=colnames(coordinates)[1], ylab=colnames(coordinates)[2], xlim = xlim, ylim=ylim, main=main, cex=cex.dot)
       } else {
         p <- plot_ly(x = coordinates[,1], y = coordinates[,2], color = variable, colors=adjustcolor(colorPal(intervals), alpha=.8)) %>%
           add_markers() %>%
@@ -595,9 +617,17 @@ plotFeatures <- function(
     }
     if (dim == 3) {
       if (!plot_ly){
-        scatterplot3d(coordinates[,1], coordinates[,2], coordinates[,3], color=cellColor[rownames(coordinates)], pch=16, xlab=colnames(coordinates)[1], ylab=colnames(coordinates)[2], zlab = colnames(coordinates)[3], main=main,
-                      xlim = c(min(coordinates[,1])-factor.min*abs(min(coordinates[,1])), max(coordinates[,1])+factor.max*abs(max(coordinates[,1]))), ylim = c(min(coordinates[,2])-factor.min*abs(min(coordinates[,2])), max(coordinates[,2])+factor.max*abs(max(coordinates[,2]))),
-                      zlim = c(min(coordinates[,3])-factor.min*abs(min(coordinates[,3])), max(coordinates[,3])+factor.max*abs(max(coordinates[,3]))), cex.symbols=cex.dot)
+        # decide xlim and ylim
+        if (is.null(xlim)) {
+          xlim = c(min(coordinates[,1])-factor.min*abs(min(coordinates[,1])), max(coordinates[,1])+factor.max*abs(max(coordinates[,1])))
+        }
+        if (is.null(ylim)) {
+          ylim = c(min(coordinates[,2])-factor.min*abs(min(coordinates[,2])), max(coordinates[,2])+factor.max*abs(max(coordinates[,2])))
+        }
+        if (is.null(zlim)) {
+          zlim = c(min(coordinates[,3])-factor.min*abs(min(coordinates[,3])), max(coordinates[,3])+factor.max*abs(max(coordinates[,3])))
+        }
+        scatterplot3d(coordinates[,1], coordinates[,2], coordinates[,3], color=cellColor[rownames(coordinates)], pch=16, xlab=colnames(coordinates)[1], ylab=colnames(coordinates)[2], zlab = colnames(coordinates)[3], main=main, xlim = xlim, ylim = ylim, zlim = zlim, cex.symbols=cex.dot)
       } else {
         p <- plot_ly(x = coordinates[,1], y = coordinates[,2], z = coordinates[,3], color = variable, colors=adjustcolor(colorPal(intervals), alpha=.8)) %>%
           add_markers() %>%
@@ -664,7 +694,10 @@ plotFeatures <- function(
   cex.legend=0.7,
   factor.min=0.05,
   factor.max=0.5,
-  cex.dot=1,
+  cex.dot=1, 
+  xlim=NULL,
+  ylim=NULL,
+  zlim=NULL, 
   ...
 ){
   levels <- as.vector(sort(unique(variable)))
@@ -679,6 +712,13 @@ plotFeatures <- function(
   
   if (!is.null(var.coord)){
     # Plot the correlation circle
+    # decide xlim and ylim
+    if (is.null(xlim)) {
+      xlim = c(-1-factor.min, 1+factor.max)
+    }
+    if (is.null(ylim)) {
+      ylim = c(-1-factor.min, 1+factor.max)
+    }          
     a <- seq(0, 2*pi, length = 100)
     plot(cos(a), sin(a), type = 'l', col="gray", xlab = "PC1",  ylab = "PC2", xlim = c(-1-factor.min, 1+factor.max), ylim = c(-1-factor.min, 1+factor.max))
     abline(h = 0, v = 0, lty = 2)
@@ -695,8 +735,14 @@ plotFeatures <- function(
   else{
     if (dim == 2){
       if (!plot_ly){
-        plot(coordinates, col=cellColor[rownames(coordinates)], pch=16, xlab=colnames(coordinates)[1], ylab=colnames(coordinates)[2], xlim = c(min(coordinates[,1])-factor.min*abs(min(coordinates[,1])), max(coordinates[,1])+factor.max*abs(max(coordinates[,1]))), 
-             ylim=c(min(coordinates[,2])-factor.min*abs(min(coordinates[,2])), max(coordinates[,2])+factor.max*abs(max(coordinates[,2]))), main=main, cex=cex.dot)
+        # decide xlim and ylim
+        if (is.null(xlim)) {
+          xlim = c(min(coordinates[,1])-factor.min*abs(min(coordinates[,1])), max(coordinates[,1])+factor.max*abs(max(coordinates[,1])))
+        }
+        if (is.null(ylim)) {
+          ylim = c(min(coordinates[,2])-factor.min*abs(min(coordinates[,2])), max(coordinates[,2])+factor.max*abs(max(coordinates[,2])))
+        }
+        plot(coordinates, col=cellColor[rownames(coordinates)], pch=16, xlab=colnames(coordinates)[1], ylab=colnames(coordinates)[2], xlim = xlim, ylim = ylim, main=main, cex=cex.dot)
       } else {
         p <- plot_ly(x = coordinates[,1], y = coordinates[,2], color = variable, colors= unique(colVars[[main]][variable])) %>%
           add_markers() %>%
@@ -708,9 +754,17 @@ plotFeatures <- function(
     }
     if (dim == 3) {
       if (!plot_ly){
-        s3d <-  scatterplot3d(coordinates[,1], coordinates[,2], coordinates[,3], color=cellColor[rownames(coordinates)], pch=16, xlab=colnames(coordinates)[1], ylab=colnames(coordinates)[2], zlab = colnames(coordinates)[3], main=main, 
-                              xlim = c(min(coordinates[,1])-factor.min*abs(min(coordinates[,1])), max(coordinates[,1])+factor.max*abs(max(coordinates[,1]))), ylim = c(min(coordinates[,2])-factor.min*abs(min(coordinates[,2])), max(coordinates[,2])+factor.max*abs(max(coordinates[,2]))),
-                              zlim = c(min(coordinates[,3])-factor.min*abs(min(coordinates[,3])), max(coordinates[,3])+factor.max*abs(max(coordinates[,3]))), cex.symbols=cex.dot)
+        # decide xlim and ylim
+        if (is.null(xlim)) {
+          xlim = c(min(coordinates[,1])-factor.min*abs(min(coordinates[,1])), max(coordinates[,1])+factor.max*abs(max(coordinates[,1])))
+        }
+        if (is.null(ylim)) {
+          ylim = c(min(coordinates[,2])-factor.min*abs(min(coordinates[,2])), max(coordinates[,2])+factor.max*abs(max(coordinates[,2])))
+        }
+        if (is.null(zlim)) {
+          zlim = c(min(coordinates[,3])-factor.min*abs(min(coordinates[,3])), max(coordinates[,3])+factor.max*abs(max(coordinates[,3])))
+        }
+        s3d <-  scatterplot3d(coordinates[,1], coordinates[,2], coordinates[,3], color=cellColor[rownames(coordinates)], pch=16, xlab=colnames(coordinates)[1], ylab=colnames(coordinates)[2], zlab = colnames(coordinates)[3], main=main, xlim = xlim, ylim = ylim, zlim = zlim, cex.symbols=cex.dot)
       } else {
         p <- plot_ly(x = coordinates[,1], y = coordinates[,2], z = coordinates[,3], color = variable, colors = unique(colVars[[main]][variable])) %>%
           add_markers() %>%
@@ -757,6 +811,8 @@ plotFeatures <- function(
 #' @param col.mid Color to use for medium topic enrichment
 #' @param col.high Color to use for high topic enrichment
 #' @param select.cells If a subset of cells want to be used for making the heatmap, selected cell names can be provided (as a vector).
+#' @param anno.width Set width of top annotation bar of heatmap. By default, it will be decided by ComplexHeatmap (recommanded).
+#' @param legend.width Set width of legend of heatmap. By default, it's 5cm.
 #' @param ... See \code{Heatmap} from ComplexHeatmap
 #'
 #' @return Heatmap clustering cells based on their cell-cisTopic distributions.
@@ -769,12 +825,14 @@ plotFeatures <- function(
 cellTopicHeatmap <- function(
   object,
   method ='Z-score',
-  colorBy=NULL,
-  colVars=NULL,
+  colorBy = NULL,
+  colVars = NULL,
   col.low = "floralwhite",
   col.mid = "pink",
   col.high = "red",
-  select.cells=NULL,
+  select.cells = NULL,
+  anno.width = NULL, # In reality, the best result is to let ComplexHeatmap decide the width. So keep NULL here.
+  legend.width = unit(5,"cm"),
   ...)
   {
   
@@ -815,11 +873,11 @@ cellTopicHeatmap <- function(
   cl.cells <- fastcluster::hclust.vector(t(topic.mat), method="ward", metric="euclidean")
   dd.cells <- as.dendrogram(cl.cells)
   colorPal <- grDevices::colorRampPalette(c(col.low, col.mid, col.high))
-  
+
   if (is.null(colorBy)){
     heatmap <- ComplexHeatmap::Heatmap(data.matrix(topic.mat), col=colorPal(20), cluster_columns=dd.cells, name=method,
                                        show_column_names=FALSE, show_row_names = TRUE, 
-                                       heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(5, "cm"), title_position='topcenter'),
+                                       heatmap_legend_param = list(legend_direction = "horizontal", legend_width = legend.width, title_position='topcenter'),
                                        column_title = "Topic contribution per cell", column_title_gp = gpar(fontface = 'bold'), ...)
     ComplexHeatmap::draw(heatmap, heatmap_legend_side = "bottom")
   } else {
@@ -829,10 +887,15 @@ cellTopicHeatmap <- function(
         cellColor <- setNames(colVars[[variable]][object.cell.data[,variable]], rownames(object.cell.data))
       }
     }
-    annotation <- ComplexHeatmap::HeatmapAnnotation(df = object.cell.data[,colorBy,drop=FALSE], col = colVars, which='column', width = unit(5, "mm"))
+    if (is.null(anno.width)) {
+        annotation <- ComplexHeatmap::HeatmapAnnotation(df = object.cell.data[,colorBy,drop=FALSE], col = colVars, which='column')
+    } else {
+        annotation <- ComplexHeatmap::HeatmapAnnotation(df = object.cell.data[,colorBy,drop=FALSE], col = colVars, which='column', width = anno.width)
+    }
+    
     heatmap <- ComplexHeatmap::Heatmap(data.matrix(topic.mat), col=colorPal(20), cluster_columns=dd.cells, name=method,
                                        show_column_names=FALSE, show_row_names = TRUE, top_annotation = annotation, 
-                                       heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(5, "cm"), title_position='topcenter'),
+                                       heatmap_legend_param = list(legend_direction = "horizontal", legend_width = legend.width, title_position='topcenter'),
                                        column_title = "Topic contribution per cell", column_title_gp = gpar(fontface = 'bold'), ...)
     ComplexHeatmap::draw(heatmap, heatmap_legend_side = "bottom", annotation_legend_side = "right")
   }
